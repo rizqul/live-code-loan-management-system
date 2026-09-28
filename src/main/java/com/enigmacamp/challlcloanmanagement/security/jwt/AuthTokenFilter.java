@@ -1,7 +1,6 @@
 package com.enigmacamp.challlcloanmanagement.security.jwt;
 
 import com.enigmacamp.challlcloanmanagement.security.customService.CustomUserDetailsService;
-import com.enigmacamp.challlcloanmanagement.utils.exceptions.JwtFilterFailException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,7 +49,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
         } catch (Exception e){
             log.error("fail to set user authentication : " + e.getMessage());
-//            throw new JwtFilterFailException("there something wrong filtering the jwt : " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);

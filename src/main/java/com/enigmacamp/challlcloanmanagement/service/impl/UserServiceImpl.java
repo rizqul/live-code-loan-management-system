@@ -7,10 +7,10 @@ import com.enigmacamp.challlcloanmanagement.entity.enums.UserRole;
 import com.enigmacamp.challlcloanmanagement.repository.UserRepository;
 import com.enigmacamp.challlcloanmanagement.service.UserService;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.InvalidParamUrlException;
-import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserIdNotFoundException;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserNotFoundException;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperUser;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +20,7 @@ import java.util.Objects;
 @Service
 @Transactional(readOnly = true)
 @AllArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -44,12 +45,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = false)
     public ResponseUser updateUser(Long id, RequestUser request) {
-        if (id <= 0 ){
+
+        log.info(">>> ENTERING updateUser with id={}", id);
+
+        if (id <= 0){
            throw new InvalidParamUrlException("bad path variable");
         }
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserIdNotFoundException("invalid user id"));
+                .orElseThrow(() -> new UserNotFoundException("invalid user id"));
 
         String name = (request.getName() != null && !request.getName().isBlank()) ? request.getName() : user.getName();
 
@@ -82,12 +86,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseUser getUserById(Long id) {
-        return null;
+
+        if (id <= 0){
+            throw new InvalidParamUrlException("bad path variable");
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("invalid user id"));
+
+        return MapperUser.convertToResponseUser(user);
     }
 
     @Override
     @Transactional(readOnly = false)
-    public void removeUser(Long id) {
+    public ResponseUser removeUser(Long id) {
+        if (id <= 0){
+            throw new InvalidParamUrlException("bad path variable");
+        }
 
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("invalid user id"));
+
+        userRepository.deleteById(id);
+        return MapperUser.convertToResponseUser(user);
     }
 }

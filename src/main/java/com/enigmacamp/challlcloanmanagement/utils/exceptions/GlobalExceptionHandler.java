@@ -21,4 +21,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(InvalidParamUrlException.class)
+    public ResponseEntity<ResponseGlobal<Object>> handlerInvalidParamUrlException(InvalidParamUrlException e, WebRequest request){
+        ResponseGlobal<Object> response =ResponseGlobal.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+
 }
