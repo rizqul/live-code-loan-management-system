@@ -63,6 +63,7 @@ public class SecurityConfig {
                                         "/api-docs/**"
                                 ).permitAll()
                                 .requestMatchers("/api/v1/users/**").hasAnyRole("CUSTOMER", "ADMIN")
+                                .requestMatchers("/api/v1/loans/**").hasAnyRole("ADMIN")
                                         .anyRequest()
                                         .authenticated()
 

@@ -36,6 +36,9 @@ public class Loan extends BaseEntity {
     @Min(0)
     private BigDecimal monthlyIncome;
 
+    @Min(0)
+    private BigDecimal monthlyExpense;
+
     private EmploymentStatus employmentStatus;
 
     private LoanStatus loanStatus;
@@ -43,5 +46,5 @@ public class Loan extends BaseEntity {
     @Min(0)
     private Long creditScore;
 
-    private LoanStatus creditRecommendation;
+    private String creditRecommendation;
 }
