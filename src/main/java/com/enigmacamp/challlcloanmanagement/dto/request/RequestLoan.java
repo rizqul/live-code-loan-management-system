@@ -16,5 +16,5 @@ public class RequestLoan {
     private Long tenor;
     private String purpose;
     private BigDecimal monthlyIncome;
-    private EmploymentStatus employmentStatus;
+    private String employmentStatus;
 }
