@@ -32,5 +32,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(ClientErrorException.class)
+    public ResponseEntity<ResponseGlobal<Object>> handlerClientErrorException(ClientErrorException e, WebRequest request){
+        ResponseGlobal<Object> response =ResponseGlobal.builder()
+                .statusCode(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
 
 }

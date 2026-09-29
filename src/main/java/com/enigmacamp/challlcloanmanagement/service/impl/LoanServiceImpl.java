@@ -12,6 +12,7 @@ import com.enigmacamp.challlcloanmanagement.model.CreditScore;
 import com.enigmacamp.challlcloanmanagement.repository.LoanRepository;
 import com.enigmacamp.challlcloanmanagement.service.CreditScoreService;
 import com.enigmacamp.challlcloanmanagement.service.LoanService;
+import com.enigmacamp.challlcloanmanagement.utils.exceptions.ClientErrorException;
 import com.enigmacamp.challlcloanmanagement.utils.helper.SecurityUtils;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,10 @@ public class LoanServiceImpl implements LoanService {
                 .build();
 
         ResponseCreditScore responseCreditScore = creditScoreService.getCreditScore(requestCreditScore);
+
+        if(responseCreditScore == null){
+            throw new ClientErrorException("client not responding");
+        }
 
         Long creditScore = responseCreditScore.getScore();
         String recommendation;
