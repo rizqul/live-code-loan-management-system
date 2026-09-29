@@ -4,6 +4,7 @@ import com.enigmacamp.challlcloanmanagement.security.jwt.AuthTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -28,70 +29,75 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 
 public class SecurityConfig {
 
-    private final UserDetailsService userDetailsService;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final AccessDeniedHandler accessDeniedHandler;
-    private final AuthTokenFilter authTokenFilter;
+        private final UserDetailsService userDetailsService;
+        private final AuthenticationEntryPoint authenticationEntryPoint;
+        private final AccessDeniedHandler accessDeniedHandler;
+        private final AuthTokenFilter authTokenFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http){
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(e -> e
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.deny())
-                        .contentTypeOptions(Customizer.withDefaults())
-                        .xssProtection(
-                                xss ->xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
-                        )
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';"))
-                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
-                        .permissionsPolicyHeader(permissionsPolicyConfig -> permissionsPolicyConfig.policy("camera=(), microphone=(), geolocation=()"))
-                )
-                .authorizeHttpRequests(
-                        (auth) -> auth
-                                .requestMatchers("/api/v1/public/**").permitAll()
-                                .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers(
-                                        "/v3/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-resource/**",
-                                        "/swagger-ui.html",
-                                        "/api-docs/**"
-                                ).permitAll()
-                                .requestMatchers("/api/v1/users/**").hasAnyRole("CUSTOMER", "ADMIN")
-                                .requestMatchers("/api/v1/loans/**").hasAnyRole("ADMIN")
-                                        .anyRequest()
-                                        .authenticated()
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .exceptionHandling(e -> e
+                                                .authenticationEntryPoint(authenticationEntryPoint)
+                                                .accessDeniedHandler(accessDeniedHandler))
+                                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .headers(headers -> headers
+                                                .frameOptions(frameOptions -> frameOptions.deny())
+                                                .contentTypeOptions(Customizer.withDefaults())
+                                                .xssProtection(
+                                                                xss -> xss.headerValue(
+                                                                                XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                                                "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';"))
+                                                .referrerPolicy(referrer -> referrer.policy(
+                                                                ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
+                                                .permissionsPolicyHeader(
+                                                                permissionsPolicyConfig -> permissionsPolicyConfig
+                                                                                .policy("camera=(), microphone=(), geolocation=()")))
+                                .authorizeHttpRequests(
+                                                (auth) -> auth
+                                                                .requestMatchers("/api/v1/public/**").permitAll()
+                                                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                                                .requestMatchers(
+                                                                                "/v3/api-docs/**",
+                                                                                "/swagger-ui/**",
+                                                                                "/swagger-resource/**",
+                                                                                "/swagger-ui.html",
+                                                                                "/api-docs/**")
+                                                                .permitAll()
+                                                                .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
+                                                                .requestMatchers(HttpMethod.GET, "/api/v1/users/me")
+                                                                .hasAnyRole("CUSTOMER", "ADMIN")
+                                                                .requestMatchers("/api/v1/loans/**").hasAnyRole("ADMIN")
+                                                                .anyRequest()
+                                                                .authenticated()
 
-                );
+                                );
 
-        http.authenticationProvider(authenticationProvider());
+                http.authenticationProvider(authenticationProvider());
 
-        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
 
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+                authProvider.setPasswordEncoder(passwordEncoder());
+                return authProvider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+                return authConfig.getAuthenticationManager();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
 }
