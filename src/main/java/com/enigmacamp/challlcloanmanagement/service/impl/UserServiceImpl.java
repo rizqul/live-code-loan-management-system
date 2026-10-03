@@ -1,13 +1,16 @@
 package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUser;
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseLoan;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUser;
+import com.enigmacamp.challlcloanmanagement.entity.Loan;
 import com.enigmacamp.challlcloanmanagement.entity.User;
 import com.enigmacamp.challlcloanmanagement.entity.enums.UserRole;
 import com.enigmacamp.challlcloanmanagement.repository.UserRepository;
 import com.enigmacamp.challlcloanmanagement.service.UserService;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.InvalidParamUrlException;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserNotFoundException;
+import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperUser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -109,5 +112,13 @@ public class UserServiceImpl implements UserService {
 
         userRepository.deleteById(id);
         return MapperUser.convertToResponseUser(user);
+    }
+
+    @Override
+    public List<ResponseLoan> getUserLoans(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("invalid user id"));
+
+        List<Loan> loans = user.getLoans();
+        return MapperLoan.convertToListResponseLoan(loans);
     }
 }

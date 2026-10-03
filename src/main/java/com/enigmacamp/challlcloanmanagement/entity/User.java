@@ -35,6 +35,9 @@ public class User extends BaseEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @OneToOne(mappedBy = "user")
+    private UserProfile userProfile;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Loan> loans;
 
