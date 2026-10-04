@@ -15,6 +15,9 @@ public class RestClientConfig {
     @Value("${api.credit-scoring.base-url:https://leptosomic-unransomed-anisha.ngrok-free.dev}")
     private String creditScoringUrl;
 
+    @Value("${groq.api.url:https://api.groq.com/openai/v1/chat/completions}")
+    private String groqBaseUrl;
+
     private ClientHttpRequestInterceptor loggingInterceptor(){
         return(((request, body, execution) -> {
             System.out.println("Request : " + request.getMethod() + " " + request.getURI());
@@ -30,6 +33,13 @@ public class RestClientConfig {
         factory.setConnectTimeout(5000);
         factory.setReadTimeout(5000);
 
+        return factory;
+    }
+
+    private SimpleClientHttpRequestFactory groqTimeoutConfiguration() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(60000);
         return factory;
     }
 
@@ -52,4 +62,13 @@ public class RestClientConfig {
                 .build();
     }
 
+    @Bean("groqClient")
+    public RestClient groqClient() {
+        return RestClient.builder()
+                .baseUrl(groqBaseUrl)
+                .defaultHeader(HttpHeaders.ACCEPT, "application/json")
+                .requestInterceptor(loggingInterceptor())
+                .requestFactory(groqTimeoutConfiguration())
+                .build();
+    }
 }
