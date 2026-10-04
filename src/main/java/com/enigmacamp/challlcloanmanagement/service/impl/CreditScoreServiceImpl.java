@@ -37,11 +37,12 @@ public class CreditScoreServiceImpl implements CreditScoreService {
     public ResponseCreditScore getCreditScore(RequestCreditScore request) {
         try {
             return restClient.post()
-                    .uri("/credit-scores")
+                    .uri("/credit-score")
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(ResponseCreditScore.class);
         } catch (Exception e){
+            log.error(e.getLocalizedMessage());
             log.error("error to retrieve data credit score : " + e.getMessage());
             return null;
         }

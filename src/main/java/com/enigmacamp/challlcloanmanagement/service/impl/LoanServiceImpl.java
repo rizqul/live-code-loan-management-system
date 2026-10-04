@@ -1,18 +1,23 @@
 package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestCreditScore;
+import com.enigmacamp.challlcloanmanagement.dto.request.RequestGroqEvaluation;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestLoan;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseCreditScore;
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseGroq;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseLoan;
 import com.enigmacamp.challlcloanmanagement.entity.Loan;
 import com.enigmacamp.challlcloanmanagement.entity.User;
+import com.enigmacamp.challlcloanmanagement.entity.UserProfile;
 import com.enigmacamp.challlcloanmanagement.entity.enums.EmploymentStatus;
 import com.enigmacamp.challlcloanmanagement.entity.enums.LoanStatus;
 import com.enigmacamp.challlcloanmanagement.model.CreditScore;
 import com.enigmacamp.challlcloanmanagement.repository.LoanRepository;
 import com.enigmacamp.challlcloanmanagement.service.CreditScoreService;
+import com.enigmacamp.challlcloanmanagement.service.GroqService;
 import com.enigmacamp.challlcloanmanagement.service.LoanService;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.ClientErrorException;
+import com.enigmacamp.challlcloanmanagement.utils.exceptions.NotCompletedProfileException;
 import com.enigmacamp.challlcloanmanagement.utils.helper.SecurityUtils;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import lombok.AllArgsConstructor;
@@ -29,6 +34,7 @@ public class LoanServiceImpl implements LoanService {
 
     private final LoanRepository loanRepository;
     private final CreditScoreService creditScoreService;
+    private final GroqService groqService;
     private final SecurityUtils securityUtils;
 
     @Override
@@ -37,10 +43,28 @@ public class LoanServiceImpl implements LoanService {
 
         User currentUser = securityUtils.getCurrentUser();
 
+        if (currentUser.getUserProfile() == null){
+            throw new NotCompletedProfileException("you not complete the user profile");
+        }
+
+        UserProfile userProfile = currentUser.getUserProfile();
+
+        if (userProfile.getMonthlyIncome() == null){
+            throw new NotCompletedProfileException("monthly income is not found");
+        }
+
+        if (userProfile.getEmploymentStatus() == null){
+            throw new NotCompletedProfileException("employment status is not found");
+        }
+
+        if (userProfile.getKtpPath() == null || userProfile.getSalarySlipPath() == null){
+            throw new NotCompletedProfileException("a mandatory document still not uploaded");
+        }
+
         RequestCreditScore requestCreditScore = RequestCreditScore.builder()
                 .id(currentUser.getId())
-                .monthlyIncome(request.getMonthlyIncome())
-                .monthlyExpense(request.getMonthlyExpense())
+                .monthlyIncome(userProfile.getMonthlyIncome())
+                .monthlyExpense(userProfile.getMonthlyExpense())
                 .requestedAmount(request.getLoanAmount())
                 .tenor(request.getTenor())
                 .build();
@@ -61,6 +85,18 @@ public class LoanServiceImpl implements LoanService {
             recommendation = "REJECTED";
         }
 
+        RequestGroqEvaluation groqEvaluation = RequestGroqEvaluation.builder()
+                .requestedAmount(request.getLoanAmount())
+                .creditScore(responseCreditScore.getScore())
+                .isEligible(responseCreditScore.getIsEligible())
+                .riskLevel(responseCreditScore.getRiskLevel())
+                .monthlyIncome(userProfile.getMonthlyIncome())
+                .employmentStatus(userProfile.getEmploymentStatus().toString())
+                .tenor(request.getTenor())
+                .build();
+
+        String responseGroq = groqService.generateEvaluation(groqEvaluation);
+
         Loan loan = Loan.builder()
                 .user(currentUser)
                 .loanAmount(request.getLoanAmount())
@@ -74,6 +110,10 @@ public class LoanServiceImpl implements LoanService {
                 .build();
 
         Loan newLoan = loanRepository.save(loan);
-        return MapperLoan.convertToResponseLoan(newLoan);
+
+        ResponseLoan  response = MapperLoan.convertToResponseLoan(newLoan);
+        response.setRecommendationGroq(responseGroq);
+
+        return response;
     }
 }

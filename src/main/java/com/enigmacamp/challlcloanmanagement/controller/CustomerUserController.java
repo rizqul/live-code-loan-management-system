@@ -1,5 +1,6 @@
 package com.enigmacamp.challlcloanmanagement.controller;
 
+import com.enigmacamp.challlcloanmanagement.dto.request.RequestLoan;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUser;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUserProfile;
 import com.enigmacamp.challlcloanmanagement.dto.response.*;
@@ -7,6 +8,7 @@ import com.enigmacamp.challlcloanmanagement.entity.Document;
 import com.enigmacamp.challlcloanmanagement.entity.Loan;
 import com.enigmacamp.challlcloanmanagement.entity.User;
 import com.enigmacamp.challlcloanmanagement.service.DocumentService;
+import com.enigmacamp.challlcloanmanagement.service.LoanService;
 import com.enigmacamp.challlcloanmanagement.service.UserService;
 import com.enigmacamp.challlcloanmanagement.utils.constants.ResponseMessage;
 import com.enigmacamp.challlcloanmanagement.utils.helper.SecurityUtils;
@@ -35,6 +37,7 @@ public class CustomerUserController {
     private final UserService userService;
     private final SecurityUtils securityUtils;
     private final DocumentService documentService;
+    private final LoanService loanService;
 
     @PutMapping("/me")
     public ResponseEntity<ResponseGlobal<ResponseUser>> updateMyProfile(@RequestBody RequestUser request) {
@@ -99,6 +102,13 @@ public class CustomerUserController {
                 .contentType(MediaType.parseMediaType(response.getDocumentExtension()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attaachment; filename=\"" + response.getDocumentName() + "\"")
                 .body(resource);
+    }
+
+    @PostMapping("/create-loan")
+    public ResponseEntity<ResponseGlobal<ResponseLoan>> createLoan(@RequestBody RequestLoan request){
+        ResponseLoan response = loanService.createLoan(request);
+
+        return ResponseBuilder.buildResponse(HttpStatus.CREATED, ResponseMessage.SUCCES_CREATE_DATA, response);
     }
 
 

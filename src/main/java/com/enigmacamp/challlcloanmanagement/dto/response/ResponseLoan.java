@@ -25,4 +25,5 @@ public class ResponseLoan {
     private Long creditScore;
     private String creditRecommendation;
     private LoanStatus status;
+    private String recommendationGroq;
 }

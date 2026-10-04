@@ -1,7 +1,7 @@
 package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestGroqEvaluation;
-import com.enigmacamp.challlcloanmanagement.dto.response.GroqResponse;
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseGroq;
 import com.enigmacamp.challlcloanmanagement.service.GroqService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -84,12 +84,12 @@ public class GroqServiceImpl implements GroqService {
                     "temperature", 0.4
             );
 
-            GroqResponse response = groqClient.post()
+            ResponseGroq response = groqClient.post()
                     .uri(apiUrl)
                     .header("Authorization", "Bearer " + apiKey)
                     .body(requestBody)
                     .retrieve()
-                    .body(GroqResponse.class);
+                    .body(ResponseGroq.class);
 
             if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
                 throw new RuntimeException("Groq API return null content");
