@@ -2,6 +2,7 @@ package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUser;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUserProfile;
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseDocument;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseLoan;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUser;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUserProfile;
@@ -22,6 +23,8 @@ import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperUser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -141,12 +144,70 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public Document uploadDocument(MultipartFile document, String documentType) {
-        User user = securityUtils.getCurrentUser();
+    public ResponseUserProfile uploadDocument(MultipartFile document, String documentType) {
+        Long id = securityUtils.getCurrentUserId();
+
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("user not found"));
+
+        Long userProfileId = user.getUserProfile().getId();
 
         Document saveDocument = documentService.store(document, documentType);
-        // TODO Auto-generated method stub
-        return saveDocument;
+
+        RequestUserProfile updatedColumn ;
+
+        if (documentType.equalsIgnoreCase("KTP")){
+            updatedColumn = RequestUserProfile.builder()
+                    .ktpPath(saveDocument.getDocumentPath())
+                    .build();
+        } else if (documentType.equalsIgnoreCase("SALARY")) {
+            updatedColumn = RequestUserProfile.builder()
+                    .salarySlipPath(saveDocument.getDocumentPath())
+                    .build();
+        } else {
+            throw new InvalidParamUrlException("Invalid document Type");
+        }
+
+
+        ResponseUserProfile updateUserProfile = userProfileService.update(userProfileId, updatedColumn);
+
+        return updateUserProfile;
+    }
+
+    @Override
+    public ResponseDocument downloadDocument(String documentType) {
+
+        User currentUser = securityUtils.getCurrentUser();
+
+
+        String fileUri;
+
+        if (documentType.equalsIgnoreCase("KTP")){
+            fileUri = currentUser.getUserProfile().getKtpPath();
+        } else if (documentType.equalsIgnoreCase("SALARY")) {
+            fileUri = currentUser.getUserProfile().getSalarySlipPath();
+        } else {
+            throw new InvalidParamUrlException("Invalid document Type");
+        }
+
+        Document document = documentService.getFileByPath(fileUri);
+
+        log.error("ini adalah document path nya : " + document.getDocumentPath());
+
+        Resource resource = documentService.loadFileAsResource(fileUri);
+
+        log.error("ini resousrce nua : " + resource.isFile());
+
+        ResponseDocument response = ResponseDocument.builder()
+                .resource(resource)
+                .documentType(document.getDocumentType())
+                .documentSize(document.getDocumentSize())
+                .documentExtension(document.getDocumentExtension())
+                .documentPath(document.getDocumentPath())
+                .documentName(document.getGeneratedName())
+                .build();
+
+
+        return response;
     }
 
     @Override

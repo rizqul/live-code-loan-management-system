@@ -1,8 +1,12 @@
 package com.enigmacamp.challlcloanmanagement.service.impl;
 
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseDocument;
 import com.enigmacamp.challlcloanmanagement.entity.Document;
 import com.enigmacamp.challlcloanmanagement.repository.DocumentRepository;
 import com.enigmacamp.challlcloanmanagement.service.DocumentService;
+import com.enigmacamp.challlcloanmanagement.utils.exceptions.DocumentNotFoundException;
+import com.enigmacamp.challlcloanmanagement.utils.exceptions.FailedGenerateFileException;
+import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperDocument;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,11 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,8 +94,21 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Resource loadFileAsResource(Long id) {
-        return null;
+    public Resource loadFileAsResource(String generatedName) {
+        try {
+            Path documentPath = this.documentLocation.resolve(generatedName).normalize();
+
+            Resource resource = new UrlResource(documentPath.toUri());
+
+            if (resource.exists()){
+                return  resource;
+            } else {
+                throw new FailedGenerateFileException("failed generated file");
+            }
+
+        } catch (MalformedURLException e){
+            throw new FailedGenerateFileException("there is problem creating a file");
+        }
     }
 
     @Override
@@ -100,6 +119,14 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void deleteFileById(Long id) {
 
+    }
+
+    @Override
+    public Document getFileByPath(String fileUri) {
+
+        Document document = documentRepository.getDocumentByDocumentPath(fileUri).orElseThrow(() -> new DocumentNotFoundException("Document not found"));
+
+        return document;
     }
 
     private void validateFile(MultipartFile file) throws BadRequestException {
