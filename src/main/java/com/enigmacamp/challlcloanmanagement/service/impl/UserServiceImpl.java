@@ -1,21 +1,30 @@
 package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUser;
+import com.enigmacamp.challlcloanmanagement.dto.request.RequestUserProfile;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseLoan;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUser;
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUserProfile;
+import com.enigmacamp.challlcloanmanagement.entity.Document;
 import com.enigmacamp.challlcloanmanagement.entity.Loan;
 import com.enigmacamp.challlcloanmanagement.entity.User;
+import com.enigmacamp.challlcloanmanagement.entity.UserProfile;
 import com.enigmacamp.challlcloanmanagement.entity.enums.UserRole;
 import com.enigmacamp.challlcloanmanagement.repository.UserRepository;
+import com.enigmacamp.challlcloanmanagement.service.DocumentService;
+import com.enigmacamp.challlcloanmanagement.service.UserProfileService;
 import com.enigmacamp.challlcloanmanagement.service.UserService;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.InvalidParamUrlException;
+import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserAlreadyHaveUserProfileException;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserNotFoundException;
+import com.enigmacamp.challlcloanmanagement.utils.helper.SecurityUtils;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperUser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,11 +36,16 @@ import java.util.Objects;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final DocumentService documentService;
+    private final UserProfileService userProfileService;
+    private final SecurityUtils securityUtils;
 
     @Override
     @Transactional(readOnly = false)
     public ResponseUser createUser(RequestUser request) {
-        UserRole userRole = (request.getUserRole() != null && !request.getUserRole().isBlank()) ? UserRole.valueOf(request.getUserRole()) : UserRole.valueOf("CUSTOMER");
+        UserRole userRole = (request.getUserRole() != null && !request.getUserRole().isBlank())
+                ? UserRole.valueOf(request.getUserRole())
+                : UserRole.valueOf("CUSTOMER");
 
         User user = User.builder()
                 .name(request.getName())
@@ -49,10 +63,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = false)
     public ResponseUser updateUser(Long id, RequestUser request) {
 
-        log.info(">>> ENTERING updateUser with id={}", id);
-
-        if (id <= 0){
-           throw new InvalidParamUrlException("bad path variable");
+        if (id <= 0) {
+            throw new InvalidParamUrlException("bad path variable");
         }
 
         User user = userRepository.findById(id)
@@ -60,14 +72,19 @@ public class UserServiceImpl implements UserService {
 
         String name = (request.getName() != null && !request.getName().isBlank()) ? request.getName() : user.getName();
 
-        String email = (request.getEmail() != null && !request.getEmail().isBlank()) ? request.getEmail() : user.getEmail();
+        String email = (request.getEmail() != null && !request.getEmail().isBlank()) ? request.getEmail()
+                : user.getEmail();
 
-        String password = (request.getPassword() != null && !request.getPassword().isBlank()) ? request.getPassword() : user.getPassword();
+        String password = (request.getPassword() != null && !request.getPassword().isBlank()) ? request.getPassword()
+                : user.getPassword();
 
-        String phoneNumber = (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) ? request.getPhoneNumber() : user.getPhoneNumber();
+        String phoneNumber = (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank())
+                ? request.getPhoneNumber()
+                : user.getPhoneNumber();
 
-        String role = (request.getUserRole() != null && !request.getUserRole().isBlank()) ? request.getUserRole().toUpperCase() : user.getRole().toString();
-
+        String role = (request.getUserRole() != null && !request.getUserRole().isBlank())
+                ? request.getUserRole().toUpperCase()
+                : user.getRole().toString();
 
         if (!Objects.equals(user.getEmail(), request.getEmail())) {
             user.setEmail(email);
@@ -90,7 +107,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseUser getUserById(Long id) {
 
-        if (id <= 0){
+        if (id <= 0) {
             throw new InvalidParamUrlException("bad path variable");
         }
 
@@ -103,7 +120,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = false)
     public ResponseUser removeUser(Long id) {
-        if (id <= 0){
+        if (id <= 0) {
             throw new InvalidParamUrlException("bad path variable");
         }
 
@@ -120,5 +137,36 @@ public class UserServiceImpl implements UserService {
 
         List<Loan> loans = user.getLoans();
         return MapperLoan.convertToListResponseLoan(loans);
+    }
+
+    @Override
+    @Transactional
+    public Document uploadDocument(MultipartFile document, String documentType) {
+        User user = securityUtils.getCurrentUser();
+
+        Document saveDocument = documentService.store(document, documentType);
+        // TODO Auto-generated method stub
+        return saveDocument;
+    }
+
+    @Override
+    @Transactional
+    public ResponseUser createUserProfile(RequestUserProfile request) {
+        Long id = securityUtils.getCurrentUserId();
+
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("user not found"));
+
+        if (user.getUserProfile() != null) {
+            throw new UserAlreadyHaveUserProfileException("user already create user profile");
+        }
+
+        UserProfile userProfile = userProfileService.create(request);
+
+        user.setUserProfile(userProfile);
+
+        User updatedUser = userRepository.save(user);
+
+        return MapperUser.convertToResponseUser(updatedUser);
+
     }
 }

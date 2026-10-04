@@ -6,10 +6,11 @@ import com.enigmacamp.challlcloanmanagement.entity.User;
 import java.util.List;
 
 public class MapperUser {
-    public static ResponseUser convertToResponseUser(User user){
+    public static ResponseUser convertToResponseUser(User user) {
 
         return ResponseUser.builder()
                 .id(user.getId())
+                .userProfile(MapperUserProfile.convertToResponseUserProfile(user.getUserProfile()))
                 .name(user.getName())
                 .email(user.getEmail())
                 .password(user.getPassword())
@@ -18,7 +19,7 @@ public class MapperUser {
                 .build();
     }
 
-    public static List<ResponseUser> convertToListResponseUser(List<User> users){
+    public static List<ResponseUser> convertToListResponseUser(List<User> users) {
         return users.stream()
                 .map(MapperUser::convertToResponseUser)
                 .toList();

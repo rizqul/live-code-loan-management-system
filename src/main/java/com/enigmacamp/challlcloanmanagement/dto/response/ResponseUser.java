@@ -1,7 +1,7 @@
 package com.enigmacamp.challlcloanmanagement.dto.response;
 
-
 import com.enigmacamp.challlcloanmanagement.entity.Loan;
+import com.enigmacamp.challlcloanmanagement.entity.UserProfile;
 import com.enigmacamp.challlcloanmanagement.entity.enums.UserRole;
 import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
@@ -17,10 +17,11 @@ import java.util.List;
 @Builder
 public class ResponseUser {
     private Long id;
+    private ResponseUserProfile userProfile;
     private String name;
     private String email;
     private String password;
     private String phoneNumber;
     private UserRole role;
-//    private List<Loan> loans;
+    // private List<Loan> loans;
 }
