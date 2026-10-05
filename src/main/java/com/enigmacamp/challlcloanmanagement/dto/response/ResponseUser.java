@@ -17,7 +17,6 @@ import java.util.List;
 @Builder
 public class ResponseUser {
     private Long id;
-    private ResponseUserProfile userProfile;
     private String name;
     private String email;
     private String password;

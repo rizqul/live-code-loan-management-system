@@ -48,9 +48,9 @@ public class CustomerUserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ResponseGlobal<ResponseUser>> getMyProfile() {
+    public ResponseEntity<ResponseGlobal<ResponseCompleteUserProfile>> getMyProfile() {
         Long id = securityUtils.getCurrentUserId();
-        ResponseUser response = userService.getUserById(id);
+        ResponseCompleteUserProfile response = userService.getUserById(id);
 
         return ResponseBuilder.buildResponse(HttpStatus.OK, ResponseMessage.SUCCES_GET_DATA, response);
     }

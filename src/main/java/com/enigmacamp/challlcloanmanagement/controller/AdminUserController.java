@@ -1,6 +1,7 @@
 package com.enigmacamp.challlcloanmanagement.controller;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUser;
+import com.enigmacamp.challlcloanmanagement.dto.response.ResponseCompleteUserProfile;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseGlobal;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUser;
 import com.enigmacamp.challlcloanmanagement.service.UserService;
@@ -44,9 +45,9 @@ public class AdminUserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseGlobal<ResponseUser>> getUserById(
+    public ResponseEntity<ResponseGlobal<ResponseCompleteUserProfile>> getUserById(
             @PathVariable Long id){
-        ResponseUser response = userService.getUserById(id);
+        ResponseCompleteUserProfile response = userService.getUserById(id);
 
         return ResponseBuilder.buildResponse(HttpStatus.OK, ResponseMessage.SUCCES_GET_DATA, response);
     }

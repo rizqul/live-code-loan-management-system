@@ -2,10 +2,7 @@ package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUser;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestUserProfile;
-import com.enigmacamp.challlcloanmanagement.dto.response.ResponseDocument;
-import com.enigmacamp.challlcloanmanagement.dto.response.ResponseLoan;
-import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUser;
-import com.enigmacamp.challlcloanmanagement.dto.response.ResponseUserProfile;
+import com.enigmacamp.challlcloanmanagement.dto.response.*;
 import com.enigmacamp.challlcloanmanagement.entity.Document;
 import com.enigmacamp.challlcloanmanagement.entity.Loan;
 import com.enigmacamp.challlcloanmanagement.entity.User;
@@ -19,6 +16,7 @@ import com.enigmacamp.challlcloanmanagement.utils.exceptions.InvalidParamUrlExce
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserAlreadyHaveUserProfileException;
 import com.enigmacamp.challlcloanmanagement.utils.exceptions.UserNotFoundException;
 import com.enigmacamp.challlcloanmanagement.utils.helper.SecurityUtils;
+import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperCompleteUserProfile;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperUser;
 import lombok.AllArgsConstructor;
@@ -108,7 +106,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseUser getUserById(Long id) {
+    public ResponseCompleteUserProfile getUserById(Long id) {
 
         if (id <= 0) {
             throw new InvalidParamUrlException("bad path variable");
@@ -117,7 +115,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("invalid user id"));
 
-        return MapperUser.convertToResponseUser(user);
+        return MapperCompleteUserProfile.convertToResponseCompleteUserProfile(user, user.getUserProfile());
     }
 
     @Override
