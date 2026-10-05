@@ -62,7 +62,7 @@ public class LoanServiceImpl implements LoanService {
         }
 
         RequestCreditScore requestCreditScore = RequestCreditScore.builder()
-                .id(currentUser.getId())
+                .customerId(currentUser.getId().toString())
                 .monthlyIncome(userProfile.getMonthlyIncome())
                 .monthlyExpense(userProfile.getMonthlyExpense())
                 .requestedAmount(request.getLoanAmount())

@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 public class RequestCreditScore {
-    private Long id;
+    private String customerId;
     private BigDecimal monthlyIncome;
     private BigDecimal monthlyExpense;
     private BigDecimal requestedAmount;
