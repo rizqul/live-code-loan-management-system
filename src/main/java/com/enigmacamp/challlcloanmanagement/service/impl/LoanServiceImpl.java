@@ -4,14 +4,13 @@ import com.enigmacamp.challlcloanmanagement.dto.request.RequestCreditScore;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestGroqEvaluation;
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestLoan;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseCreditScore;
-import com.enigmacamp.challlcloanmanagement.dto.response.ResponseGroq;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseLoan;
 import com.enigmacamp.challlcloanmanagement.entity.Loan;
 import com.enigmacamp.challlcloanmanagement.entity.User;
 import com.enigmacamp.challlcloanmanagement.entity.UserProfile;
-import com.enigmacamp.challlcloanmanagement.entity.enums.EmploymentStatus;
+import com.enigmacamp.challlcloanmanagement.entity.enums.AiStatus;
 import com.enigmacamp.challlcloanmanagement.entity.enums.LoanStatus;
-import com.enigmacamp.challlcloanmanagement.model.CreditScore;
+import com.enigmacamp.challlcloanmanagement.model.GroqEvaluation;
 import com.enigmacamp.challlcloanmanagement.repository.LoanRepository;
 import com.enigmacamp.challlcloanmanagement.service.CreditScoreService;
 import com.enigmacamp.challlcloanmanagement.service.GroqService;
@@ -22,9 +21,10 @@ import com.enigmacamp.challlcloanmanagement.utils.helper.SecurityUtils;
 import com.enigmacamp.challlcloanmanagement.utils.mapper.MapperLoan;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @Transactional(readOnly = true)
@@ -75,16 +75,6 @@ public class LoanServiceImpl implements LoanService {
             throw new ClientErrorException("client not responding");
         }
 
-        Long creditScore = responseCreditScore.getScore();
-        String recommendation;
-        if (creditScore >= 700){
-            recommendation = "APPROVED";
-        } else if (creditScore >= 500) {
-           recommendation = "REVIEW";
-        } else {
-            recommendation = "REJECTED";
-        }
-
         RequestGroqEvaluation groqEvaluation = RequestGroqEvaluation.builder()
                 .requestedAmount(request.getLoanAmount())
                 .creditScore(responseCreditScore.getScore())
@@ -95,25 +85,30 @@ public class LoanServiceImpl implements LoanService {
                 .tenor(request.getTenor())
                 .build();
 
-        String responseGroq = groqService.generateEvaluation(groqEvaluation);
+        GroqEvaluation responseGroq = groqService.generateEvaluation(groqEvaluation);
+
+        AiStatus aiStatus = AiStatus.FAILED;
+        if (responseGroq.getRecommendation() != null || responseGroq.getExplanation() != null){
+            aiStatus = AiStatus.SUCCESS;
+        }
 
         Loan loan = Loan.builder()
                 .user(currentUser)
                 .loanAmount(request.getLoanAmount())
                 .tenor(request.getTenor())
                 .purpose(request.getPurpose())
-                .monthlyIncome(request.getMonthlyIncome())
-                .employmentStatus(EmploymentStatus.valueOf(request.getEmploymentStatus()))
-                .creditScore(creditScore)
-                .creditRecommendation(recommendation)
-                .loanStatus(LoanStatus.valueOf("PENDING"))
+                .creditScore(responseCreditScore.getScore())
+                .riskLevel(responseCreditScore.getRiskLevel())
+                .isEligible(Boolean.valueOf(responseCreditScore.getIsEligible()))
+                .aiRecommendation(responseGroq.getRecommendation())
+                .aiExplanation(responseGroq.getExplanation())
+                .aiStatus(aiStatus)
+                .aiGeneratedAt(LocalDateTime.now())
+                .loanStatus(LoanStatus.PENDING)
                 .build();
 
         Loan newLoan = loanRepository.save(loan);
 
-        ResponseLoan  response = MapperLoan.convertToResponseLoan(newLoan);
-        response.setRecommendationGroq(responseGroq);
-
-        return response;
+        return MapperLoan.convertToResponseLoan(newLoan);
     }
 }

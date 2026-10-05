@@ -19,11 +19,11 @@ public class ResponseLoan {
     private BigDecimal loanAmount;
     private Long tenor;
     private String purpose;
-    private BigDecimal monthlyIncome;
-    private BigDecimal monthlyExpense;
-    private EmploymentStatus employmentStatus;
     private Long creditScore;
-    private String creditRecommendation;
-    private LoanStatus status;
-    private String recommendationGroq;
+    private String riskLevel;
+    private Boolean isEligible;
+    private String aiRecommendation;
+    private String aiExplanation;
+    private String aiStatus;
+    private LoanStatus loanStatus;
 }

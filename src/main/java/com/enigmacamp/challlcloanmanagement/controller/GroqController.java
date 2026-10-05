@@ -1,6 +1,7 @@
 package com.enigmacamp.challlcloanmanagement.controller;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestGroqEvaluation;
+import com.enigmacamp.challlcloanmanagement.model.GroqEvaluation;
 import com.enigmacamp.challlcloanmanagement.service.GroqService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class GroqController {
     }
 
     @PostMapping("/eval")
-    public ResponseEntity<String> generateQuiz(
+    public ResponseEntity<GroqEvaluation> generateQuiz(
             @RequestBody RequestGroqEvaluation request
     ) {
 

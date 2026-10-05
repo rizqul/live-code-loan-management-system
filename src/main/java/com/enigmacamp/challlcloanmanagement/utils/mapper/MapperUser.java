@@ -10,7 +10,6 @@ public class MapperUser {
 
         return ResponseUser.builder()
                 .id(user.getId())
-                .userProfile(MapperUserProfile.convertToResponseUserProfile(user.getUserProfile()))
                 .name(user.getName())
                 .email(user.getEmail())
                 .password(user.getPassword())

@@ -11,8 +11,8 @@ public enum LoanStatus {
             return false;
         }
 
-        for (UserRole userRole : UserRole.values()) {
-            if (userRole.name().equals(value)) {
+        for (LoanStatus loanStatus : LoanStatus.values()) {
+            if (loanStatus.name().equals(value)) {
                 return true;
             }
         }

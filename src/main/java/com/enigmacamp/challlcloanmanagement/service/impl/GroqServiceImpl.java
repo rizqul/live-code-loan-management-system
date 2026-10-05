@@ -2,12 +2,16 @@ package com.enigmacamp.challlcloanmanagement.service.impl;
 
 import com.enigmacamp.challlcloanmanagement.dto.request.RequestGroqEvaluation;
 import com.enigmacamp.challlcloanmanagement.dto.response.ResponseGroq;
+import com.enigmacamp.challlcloanmanagement.model.GroqEvaluation;
 import com.enigmacamp.challlcloanmanagement.service.GroqService;
+import com.enigmacamp.challlcloanmanagement.utils.exceptions.FailedCreateGroqEvaluationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -27,13 +31,17 @@ public class GroqServiceImpl implements GroqService {
     @Value("${groq.ai.key}")
     private String apiKey;
 
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     public GroqServiceImpl(
             @Qualifier("groqClient") RestClient groqClient) {
         this.groqClient = groqClient;
     }
 
     @Override
-    public String generateEvaluation(RequestGroqEvaluation request) {
+    public GroqEvaluation generateEvaluation(RequestGroqEvaluation request) {
         try {
             String systemPrompt = """
                     you are a loan analysis assistant for loan service management system.
@@ -47,10 +55,12 @@ public class GroqServiceImpl implements GroqService {
                           "explanation": "the reason why it use the following <recommendation>."
                     }
                     
-                    the <recommendation> is can only be either one of these values :
+                    IMPORTATNT :
+                    - the <recommendation> is can only be either one of these values :
                         1. APPROVE
                         2. REVIEW
                         3. REJECT
+                    - the explanation is max 100 character
                     """;
 
             String userPrompt = """
@@ -95,11 +105,19 @@ public class GroqServiceImpl implements GroqService {
                 throw new RuntimeException("Groq API return null content");
             }
 
-            return response
-                    .getChoices()
-                    .get(0)
-                    .getMessage()
-                    .getContent();
+            GroqEvaluation evaluation;
+            try {
+                evaluation = objectMapper.readValue(response
+                        .getChoices()
+                        .get(0)
+                        .getMessage()
+                        .getContent(), GroqEvaluation.class);
+            } catch (Exception e){
+                log.error(e.getMessage());
+                throw new FailedCreateGroqEvaluationException("failed to create ai recommendation");
+            }
+
+            return evaluation;
 
         } catch (Exception e) {
             log.error("Failed to generate quiz form groq");

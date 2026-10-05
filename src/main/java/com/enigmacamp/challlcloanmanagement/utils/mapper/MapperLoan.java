@@ -13,10 +13,13 @@ public class MapperLoan {
                 .loanAmount(loan.getLoanAmount())
                 .tenor(loan.getTenor())
                 .purpose(loan.getPurpose())
-                .monthlyIncome(loan.getMonthlyIncome())
-                .employmentStatus(loan.getEmploymentStatus())
                 .creditScore(loan.getCreditScore())
-                .status(loan.getLoanStatus())
+                .riskLevel(loan.getRiskLevel())
+                .isEligible(loan.getIsEligible())
+                .aiRecommendation(loan.getAiRecommendation().toString())
+                .aiExplanation(loan.getAiExplanation())
+                .aiStatus(loan.getAiStatus().toString())
+                .loanStatus(loan.getLoanStatus())
                 .build();
     }
 

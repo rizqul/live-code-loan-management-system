@@ -11,8 +11,8 @@ public enum EmploymentStatus {
             return false;
         }
 
-        for (UserRole userRole : UserRole.values()) {
-            if (userRole.name().equals(value)) {
+        for (EmploymentStatus employmentStatus : EmploymentStatus.values()) {
+            if (employmentStatus.name().equals(value)) {
                 return true;
             }
         }

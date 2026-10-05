@@ -22,13 +22,4 @@ public class RequestLoan {
 
     @NotBlank
     private String purpose;
-
-    @Min(message = "the amount must be greater than zero", value = 0)
-    private BigDecimal monthlyIncome;
-
-    @Min(message = "the amount must be greater than zero", value = 0)
-    private BigDecimal monthlyExpense;
-
-    @NotBlank
-    private String employmentStatus;
 }
